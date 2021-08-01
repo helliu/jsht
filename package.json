@@ -1,0 +1,27 @@
+{
+  "name": "jsht",
+  "version": "1.0.0",
+  "description": "Tool to generate templates, using node js.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "jsht": "./bin/jsht"
+  },
+  "author": "helliu",
+  "license": "GNU",
+  "dependencies": {
+    "readline-sync": "^1.4.10",
+    "shellparams": "^1.0.3"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/helliu/jsht.git"
+  },
+  "bugs": {
+    "url": "https://github.com/helliu/jsht/issues"
+  },
+  "homepage": "https://github.com/helliu/jsht#readme"
+}
