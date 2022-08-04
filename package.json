@@ -1,6 +1,6 @@
 {
   "name": "jsht",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Tool to generate templates, using node js.",
   "main": "index.js",
   "scripts": {
@@ -12,9 +12,9 @@
   "keywords": [
     "template",
     "nodejs",
-	"node",
-	"codegen",
-	"generator"
+    "node",
+    "codegen",
+    "generator"
   ],
   "author": "helliu",
   "license": "GNU",

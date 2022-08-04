@@ -61,6 +61,7 @@ class Jsht{
     }
 
     generateJSCodeFromTemplate(templateContent, templateName, templatePath, templateDir, outputDir, outputFile, inputArgs, namedArgs, nodeModuleFolderPath, overwriteExistingFiles){
+        templateContent = this.sanitizeTemplateLiteralsInput(templateContent);
         let templateParts = _JshtInternal.divideInTemplateParts(templateContent);
         let inputArgsJSON = JSON.stringify(inputArgs).replace(/\"/g, '\\"');
         let namedArgsJSON = JSON.stringify(namedArgs).replace(/\"/g, '\\"');
@@ -120,6 +121,13 @@ class Jsht{
                   "})();";
 
         return jsCode;
+    }
+
+    sanitizeTemplateLiteralsInput(value){
+       value = value.replace(/`/g, "\\`");
+       value = value.replace(/\$\{/g, "\\${");
+
+       return value;
     }
 }
 
