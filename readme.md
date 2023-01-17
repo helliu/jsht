@@ -110,7 +110,7 @@ short form: printed text
 Will generate
 ```js
 
-    var smallerVar;
+var smallerVar;
 
 ```
 
@@ -180,13 +180,39 @@ Template path directory: <YOUR_LOCATION>/.jshtTemplates/create
 ```
 
 
+**not generating output location**
+```js
+<#
+    outputFile = "";
+#>
+```
+or
+```js
+<#
+    outputFile = null;
+#>
+```
+
+
 **Overwite file without asking**
 -rf option overwrite existing files without asking.
 Example
 ```
-<#
 jsht create class -rf
-#>
+```
+
+**Output generated template in console**\
+-outputTemplate \
+Example
+```
+jsht create class -outputTemplate
+```
+
+**Output generated JS Code in console for debug**\
+-outputJSCode \
+Example
+```
+jsht create class -outputJSCode
 ```
 
 
@@ -228,9 +254,24 @@ require("./folder/fileToBeCalled");
 
 **Call Template from template**
 ```
-    callTemplate("./otherTemplate.js", [], []);
+callTemplate("./otherTemplate.js", [], []);
+```
+or through command:
+```
+execShell("jsht otherTemplate");
 ```
 The second parameter is an array of input arguments. The third parameter is an arrays of named arguments.
+
+**Build in functions**
+- **execShell** - execute command in the system \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**params:** \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**command** - command to be executed \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**path** - optional, folder to execute the command, if not provided it will be executed on the current folder. \
+**Example:**
+```
+execShell("ls");
+execShell("cd ..");
+```
 
 
 **Input Args**

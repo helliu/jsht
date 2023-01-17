@@ -70,7 +70,7 @@ function executeTemplate(...args){
                                        executeTemplateResut.inputArgs, 
                                        executeTemplateResut.templateNamedArgs,
                                        nodeModuleFolderPath,
-                                       executeTemplateResut.overwriteExistingFiles);
+                                       executeTemplateResut.options);
         break;
     }
     
@@ -85,11 +85,21 @@ function processExecuteTemplateArgs(args){
     }    
 
     executeTemplateResut.templateNamedArgs = extractNamedArgs(args, true);
-    executeTemplateResut.overwriteExistingFiles = false;
+    executeTemplateResut.options = {overwriteExistingFiles: false, outputTemplate: false, outputJSCode: false};
     
     if(executeTemplateResut.templateNamedArgs && executeTemplateResut.templateNamedArgs["rf"]){
-        executeTemplateResut.overwriteExistingFiles = true;
+        executeTemplateResut.options.overwriteExistingFiles = true;
         delete executeTemplateResut.templateNamedArgs["rf"];
+    }
+    
+    if(executeTemplateResut.templateNamedArgs && executeTemplateResut.templateNamedArgs["outputTemplate"]){
+        executeTemplateResut.options.outputTemplate = true;
+        delete executeTemplateResut.templateNamedArgs["outputTemplate"];
+    }
+    
+    if(executeTemplateResut.templateNamedArgs && executeTemplateResut.templateNamedArgs["outputJSCode"]){
+        executeTemplateResut.options.outputJSCode = true;
+        delete executeTemplateResut.templateNamedArgs["outputJSCode"];
     }
     
     executeTemplateResut.inputArgs = [];

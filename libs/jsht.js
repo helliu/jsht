@@ -4,7 +4,7 @@ const ___readlineSync = require('readline-sync');
 const ___ioUtils = require("./ioUtils");
 
 class Jsht{
-    execTemplateByFilePath(filePath, inputArgs, namedArgs, nodeModuleFolderPath, overwriteExistingFiles){
+    execTemplateByFilePath(filePath, inputArgs, namedArgs, nodeModuleFolderPath, options){
         let content = ___fs.readFileSync(filePath, "utf8");
         let templateFileName = ___path.basename(filePath);
         let templateName = ___path.parse(templateFileName).name;
@@ -13,7 +13,12 @@ class Jsht{
         let templatePath = ___path.isAbsolute(filePath) ? filePath : ___path.resolve(filePath);
         let templateDir = ___path.dirname(templatePath);
         
-        let templateResult = this.processTemplate(content, templateName, templatePath, templateDir, outputDir, outputFile, inputArgs, namedArgs, nodeModuleFolderPath, overwriteExistingFiles);
+        let templateResult = this.processTemplate(content, templateName, templatePath, templateDir, outputDir, outputFile, inputArgs, namedArgs, nodeModuleFolderPath, options.overwriteExistingFiles);
+
+        if(options.outputJSCode){
+            console.log("JS Code: ");
+            console.log(templateResult.generatedJSCode);
+        }
 
         if(!templateResult.executionOk){
             console.log("Error creating file from template: " + filePath);
@@ -22,21 +27,28 @@ class Jsht{
         }
 
         outputFile = templateResult.outputFilePath;
-
-        if(!___path.isAbsolute(outputFile)){
-            outputFile = outputFile.trim();
-
-            outputFile = outputDir + "/" + outputFile;
+        
+        if(options.outputTemplate){
+            console.log("Template File: ");
+            console.log(templateResult.generatedTemplate);
         }
 
-        outputFile = ___path.resolve(outputFile);
+        if(outputFile && outputFile.trim()){
+            if(!___path.isAbsolute(outputFile)){
+                outputFile = outputFile.trim();
 
-        if(___fs.existsSync(outputFile) && !overwriteExistingFiles)
-        if(!___readlineSync.keyInYN('File ' + outputFile + " already exists, wish to overwrite it?"))
-            return;
-           
-        ___ioUtils.saveFullPath(outputFile, templateResult.generatedTemplate);
-        console.log("Created file: " + outputFile + " from template: " + templatePath);
+                outputFile = outputDir + "/" + outputFile;
+            }
+
+            outputFile = ___path.resolve(outputFile);
+
+            if(___fs.existsSync(outputFile) && !options.overwriteExistingFiles)
+            if(!___readlineSync.keyInYN('File ' + outputFile + " already exists, wish to overwrite it?"))
+                return;
+            
+            ___ioUtils.saveFullPath(outputFile, templateResult.generatedTemplate);
+            console.log("Created file: " + outputFile + " from template: " + templatePath);
+        }
     }
 
     processTemplate(templateContent, templateName, templatePath, templateDir, outputDir, outputFile, inputArgs, namedArgs, nodeModuleFolderPath, overwriteExistingFiles){
@@ -72,59 +84,75 @@ class Jsht{
         nodeModuleFolderPath = nodeModuleFolderPath != null ? nodeModuleFolderPath.replace(/\\/g, '/') : nodeModuleFolderPath;
         let formattedNodeModuleFolderPath = nodeModuleFolderPath == null ? null : "\"" + nodeModuleFolderPath + "\"";
 
-        let jsCode =  "var ___this = this;" +
-                      "(function(){" + 
-                      "    var ____jsTemplateResu = {};\r\n" + 
-                      "    ____jsTemplateResu.value = \"\";\r\n" + 
-                      "    function printText(text){\r\n" + 
-                      "        ____jsTemplateResu.value += text;\r\n" + 
-                      "    }\r\n" + 
-                      "    var outputFile = \"" + outputFile + "\";\r\n" + 
-                      "    var currentDir = \"" + outputDir + "\";\r\n" + 
-                      "    var templateName = \"" + templateName + "\";\r\n" + 
-                      "    var templatePath = \"" + templatePath + "\";\r\n" + 
-                      "    var templateDir = \"" + templateDir + "\";\r\n" + 
-                      "    var inputArgs = JSON.parse(\"" + inputArgsJSON + "\");\r\n" + 
-                      "    var namedArgs = JSON.parse(\"" + namedArgsJSON + "\");\r\n" + 
-                      "    var overwriteExistingFiles = " + overwriteExistingFiles + ";\r\n" + 
-                      "    var ___nodeModuleFolderPath = " + formattedNodeModuleFolderPath + ";\r\n" + 
-                      "    global['___countRequire'] = global['___countRequire'] ? global['___countRequire']++ : 1;\r\n" + 
-                      "    global['___originalRequire'] = global['___originalRequire'] ? global['___originalRequire'] : require;\r\n" + 
-                      "    require = function(requirePath){\r\n" + 
-                      "       try{\r\n" + 
-                      "           if(___nodeModuleFolderPath)\r\n" +
-                      "               return global['___originalRequire'](___nodeModuleFolderPath + \"/\" + requirePath);\r\n" +
-                      "       }catch(e){}\r\n" +
-                      "       try{\r\n" + 
-                      "           return global['___originalRequire'](requirePath);\r\n" +
-                      "       }catch(e){}\r\n" +
-                      "       return global['___originalRequire'](templateDir + \"/\" + requirePath);" +
-                      "    };" +
-                      "    \r\n" + 
-                      "    function callTemplate(template, inputParamsTemplate, namedParamsTemplate){\r\n" + 
-                      "       if(!___path.isAbsolute(template))\r\n" + 
-                      "          template = ___path.resolve(templateDir + '/' + template);\r\n" + 
-                      "    \r\n" +
-                      "       ___this.execTemplateByFilePath(template, inputParamsTemplate, namedParamsTemplate, ___nodeModuleFolderPath, overwriteExistingFiles);\r\n" + 
-                      "    }";
+        let jsCode =  `
+    var ___this = this;
+    (function(){ 
+        var ____jsTemplateResu = {};
+        ____jsTemplateResu.value = "";
+        function printText(text){
+            ____jsTemplateResu.value += text;
+        }
+        var outputFile = "${outputFile}";
+        var currentDir = "${outputDir}";
+        var templateName = "${templateName}";
+        var templatePath = "${templatePath}";
+        var templateDir = "${templateDir}";
+        var inputArgs = JSON.parse("${inputArgsJSON}");
+        var namedArgs = JSON.parse("${namedArgsJSON}");
+        var overwriteExistingFiles = ${overwriteExistingFiles};
+        var ___nodeModuleFolderPath = ${formattedNodeModuleFolderPath};
+        global['___countRequire'] = global['___countRequire'] ? global['___countRequire']++ : 1;
+        global['___originalRequire'] = global['___originalRequire'] ? global['___originalRequire'] : require;
+        require = function(requirePath){
+           try{
+               if(___nodeModuleFolderPath)
+                   return global['___originalRequire'](___nodeModuleFolderPath + '/' + requirePath);
+           }catch(e){}
+           try{
+               return global['___originalRequire'](requirePath);
+           }catch(e){}
+           return global['___originalRequire'](templateDir + '/' + requirePath);
+        };
+ 
+        function callTemplate(template, inputParamsTemplate, namedParamsTemplate){ 
+           if(!___path.isAbsolute(template)) 
+              template = ___path.resolve(templateDir + '/' + template); 
+        
+           ___this.execTemplateByFilePath(template, inputParamsTemplate, namedParamsTemplate, ___nodeModuleFolderPath, overwriteExistingFiles); 
+        }
+        
+        function execShell(command, path){
+            var shell = require('child_process');
+            let resultShell = "";
+            
+            if(path){
+                resultShell = shell.execSync(command, {cwd: path}).toString();
+            }else{
+                resultShell = shell.execSync(command).toString();
+            }
+            
+            console.log(resultShell);
+        }`;
 
         for(let i = 0; i < templateParts.length; i++)
             jsCode += templateParts[i].jsExpression;
 
-        jsCode += "   ____jsTemplateResu.outputFile = outputFile;\r\n" +
-                  "   \r\n" +
-                  "   if(--global['___countRequire'] <= 0){\r\n" +
-                  "       require = global['___originalRequire'];\r\n" +
-                  "   }\r\n" +
-                  "   \r\n" +
-                  "    return ____jsTemplateResu;" + 
-                  "})();";
+        jsCode += `
+    ____jsTemplateResu.outputFile = outputFile;
+
+       if(--global['___countRequire'] <= 0){
+           require = global['___originalRequire'];
+       }
+
+        return ____jsTemplateResu;
+    })();`;
 
         return jsCode;
     }
 
     sanitizeTemplateLiteralsInput(value){
-       value = value.replace(/`/g, "\\`");
+        value = value.replace(/\\/g, "\\\\");
+       value = value.replace(/`/g, "\`");
        value = value.replace(/\$\{/g, "\\${");
 
        return value;
@@ -188,6 +216,7 @@ class _JshtInternal{
         let templatePart = { PartType:{ PRINT_EXPRESSION:0, EXEC_JS_EXPRESSION:1, PRINT_TEXT:1 } };
 
         templatePart.raw = rawTemplatePart;
+        rawTemplatePart = rawTemplatePart.replace(/`/g, "\\`");
 
         if(rawTemplatePart.startsWith("<#=")){
             templatePart.type = templatePart.PartType.PRINT_EXPRESSION;
