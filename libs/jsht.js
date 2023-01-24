@@ -73,7 +73,6 @@ class Jsht{
     }
 
     generateJSCodeFromTemplate(templateContent, templateName, templatePath, templateDir, outputDir, outputFile, inputArgs, namedArgs, nodeModuleFolderPath, overwriteExistingFiles){
-        templateContent = this.sanitizeTemplateLiteralsInput(templateContent);
         let templateParts = _JshtInternal.divideInTemplateParts(templateContent);
         let inputArgsJSON = JSON.stringify(inputArgs).replace(/\"/g, '\\"');
         let namedArgsJSON = JSON.stringify(namedArgs).replace(/\"/g, '\\"');
@@ -84,7 +83,7 @@ class Jsht{
         nodeModuleFolderPath = nodeModuleFolderPath != null ? nodeModuleFolderPath.replace(/\\/g, '/') : nodeModuleFolderPath;
         let formattedNodeModuleFolderPath = nodeModuleFolderPath == null ? null : "\"" + nodeModuleFolderPath + "\"";
 
-        let jsCode =  `
+        let jsCode =  String.raw`
     var ___this = this;
     (function(){ 
         var ____jsTemplateResu = {};
@@ -149,14 +148,6 @@ class Jsht{
 
         return jsCode;
     }
-
-    sanitizeTemplateLiteralsInput(value){
-        value = value.replace(/\\/g, "\\\\");
-       value = value.replace(/`/g, "\`");
-       value = value.replace(/\$\{/g, "\\${");
-
-       return value;
-    }
 }
 
 class _JshtInternal{
@@ -216,7 +207,6 @@ class _JshtInternal{
         let templatePart = { PartType:{ PRINT_EXPRESSION:0, EXEC_JS_EXPRESSION:1, PRINT_TEXT:1 } };
 
         templatePart.raw = rawTemplatePart;
-        rawTemplatePart = rawTemplatePart.replace(/`/g, "\\`");
 
         if(rawTemplatePart.startsWith("<#=")){
             templatePart.type = templatePart.PartType.PRINT_EXPRESSION;
@@ -232,10 +222,21 @@ class _JshtInternal{
             templatePart.jsExpression = expressionWithouDelimeters;
         }else{
             templatePart.type = templatePart.PartType.PRINT_TEXT;
+            rawTemplatePart = _JshtInternal.sanitizeTemplateStringInput(rawTemplatePart);
             templatePart.jsExpression = "printText(`" + rawTemplatePart + "`);";
         }
 
         return templatePart;
+    }
+
+    static sanitizeTemplateStringInput(value){
+       value = value.replace(/\\(?!(`|\`|\$\{|\$\{))/g, "\\\\"); //negative look forward for `|\`|\$
+       value = value.replace(/\\\`/g, "\\\\`");
+       value = value.replace(/`/g, "\\`");
+       value = value.replace(/\\\$\{/g, "\\\\\$\{");
+       value = value.replace(/\$\{/g, "\\\$\{");
+
+       return value;
     }
 }
 

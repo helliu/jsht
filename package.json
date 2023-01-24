@@ -1,6 +1,6 @@
 {
   "name": "jsht",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Tool to generate templates, using node js.",
   "main": "index.js",
   "scripts": {
